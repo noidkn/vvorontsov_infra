@@ -1,6 +1,3 @@
-# vvorontsov_infra
-vvorontsov Infra repository
-
 ## Home Work #3 (cloud-bastion)
 #### VM IP adresses:
 bastion_IP = 34.77.254.111
