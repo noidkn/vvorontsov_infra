@@ -22,3 +22,5 @@ User vvorontsov
 Port 22
 ProxyCommand ssh bastion -W %h:%p
 ```
+
+Теперь мы можем подключаться к хосту указывая только его имя из конфиг файла, например: ssh someinternalhost
