@@ -1,6 +1,6 @@
 terraform {
   # Версия terraform
-  required_version = "0.11.11"
+  required_version = ">=0.11,<0.12"
 }
 
 provider "google" {
@@ -14,7 +14,7 @@ provider "google" {
 
 resource "google_compute_project_metadata" "ssh-keys" {
   metadata = {
-    ssh-keys = "appuser1:${file(var.public_key)} appuser2:${file(var.public_key)}"
+    ssh-keys = "appuser:${file(var.public_key)} appuser1:${file(var.public_key)} appuser2:${file(var.public_key)}"
   }
 }
 
