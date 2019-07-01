@@ -1,3 +1,50 @@
+## HomeWork #6 (terraform-1)
+#### Самостоятельная работа
+Установил input переменную для приватного ключа:
+
+`private_key = "${file(var.private_key_path)}"`
+
+Установил input переменную для задания зоны в ресурсе
+"google_compute_instance" "app":
+```
+variable zone {
+  description = "Zone"
+  # Значение по умолчанию
+  default = "europe-west1-b"
+}
+
+resource "google_compute_instance" "app" {
+  name         = "reddit-app"
+  machine_type = "g1-small"
+  zone         = "${var.zone}"
+  tags         = ["reddit-app"]
+...
+```
+Выполнил форматирование конфигурационных файлой:
+
+`terraform fmt`
+
+Создал файл terraform.tfvars.example, в котором будут указаны
+переменные для образца:
+```
+project = "your_project_id"
+public_key_path = "~/.ssh/appuser.pub"
+private_key_path = "~/.ssh/appuser"
+disk_image = "reddit-base"
+```
+#### Задание со*
+Добавил ssh ключи пользователей в метаданне проекта:
+```
+resource "google_compute_project_metadata" "ssh-keys" {
+  metadata = {
+    ssh-keys = "appuser:${file(var.public_key_path)} appuser1:${file(var.public_key_path)} appuser2:${file(var.public_key_path)}"
+  }
+}
+
+```
+Ключи, не установленные в конфигурации terraform, но установленные на сервере, будут удалены. [Ссылка на документацию.](https://www.terraform.io/docs/providers/google/r/compute_project_metadata.html)
+
+
 ## HomeWork #5 (packer-base)
 #### Самостоятельная работа
 
