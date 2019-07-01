@@ -14,7 +14,7 @@ provider "google" {
 
 resource "google_compute_project_metadata" "ssh-keys" {
   metadata = {
-    ssh-keys = "appuser:${file(var.public_key)} appuser1:${file(var.public_key)} appuser2:${file(var.public_key)}"
+    ssh-keys = "appuser:${file(var.public_key_path)} appuser1:${file(var.public_key_path)} appuser2:${file(var.public_key_path)}"
   }
 }
 
@@ -41,7 +41,7 @@ resource "google_compute_instance" "app" {
   }
 
   metadata {
-    ssh-keys = "appuser:${file(var.public_key)}"
+    ssh-keys = "appuser:${file(var.public_key_path)}"
   }
 
   # ssh подключение для provisioner
@@ -49,9 +49,8 @@ resource "google_compute_instance" "app" {
     type  = "ssh"
     user  = "appuser"
     agent = false
-
     # путь до приватного ключа
-    private_key = "${file(var.private_key)}"
+    private_key = "${file(var.private_key_path)}"
   }
 
   # добовление сервиса puma

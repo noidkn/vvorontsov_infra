@@ -1,4 +1,4 @@
 project = "your_project_id"
-public_key = "your_public_key"
-private_key = "your_private_key"
+public_key_path = "your_public_key_path"
+private_key_path = "your_private_key_path"
 disk_image = "reddit-base"
