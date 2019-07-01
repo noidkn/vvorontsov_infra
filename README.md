@@ -20,7 +20,7 @@ resource "google_compute_instance" "app" {
   tags         = ["reddit-app"]
 ...
 ```
-Выполнил форматирование конфигурационных файлой:
+Выполнил форматирование конфигурационных файлов:
 
 `terraform fmt`
 
