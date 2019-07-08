@@ -1,3 +1,59 @@
+## HomeWork #7 (terraform-2)
+#### Самостоятельная работа
+Создал с помощью packer отдельные образы для app и db:
+- reddit-app-base
+- reddit-db-base
+
+Текущую конфигурацию terraform разбил на два модуля app и db, и создал модуль vpc для правил файрвола. В файле main.tf указываем откуда загружать модули [source]:
+
+```
+module "app" {
+  source          = "../modules/app"
+  public_key_path = "${var.public_key_path}"
+  zone            = "${var.zone}"
+  app_disk_image  = "${var.app_disk_image}"
+}
+
+module "db" {
+  source          = "../modules/db"
+  public_key_path = "${var.public_key_path}"
+  zone            = "${var.zone}"
+  db_disk_image   = "${var.db_disk_image}"
+}
+
+module "vpc" {
+  source        = "../modules/vpc"
+  source_ranges = ["${var.ip_access_range}"]
+}
+
+```
+Модули загружаются с помощью команды `terraform get`
+Разделил инфраструктуру на два окружения:
+- stage
+- prod
+
+#### Задание со*
+Для хранения текущего стейта настроил remote backend используя для этого GCS. Для создания GCS используется storage-bucket.tf после чего, происходит инициализация в stage и prod конфигурациях через terraform init. Если присутствовал локальный стейт - будет предложено его перенести в remote.
+Если будет выполнено одновременное обращение к стейту, то сработает блокировка:
+
+```
+Error: Error locking state: Error acquiring the state lock: writing "gs://infra244120-tfstate-prod/prod/default.tflock" failed: googleapi: Error 412: Precondition Failed, conditionNotMet
+Lock Info:
+  ID:        1562610887460919
+  Path:      gs://infra244120-tfstate-prod/prod/default.tflock
+  Operation: OperationTypeApply
+  Who:       appuser@test1
+  Version:   0.11.11
+  Created:   2019-07-08 18:34:47.348432387 +0000 UTC
+  Info:
+
+
+Terraform acquires a state lock to protect the state from being written
+by multiple users at the same time. Please resolve the issue above and try
+again. For most commands, you can disable locking with the "-lock=false"
+flag, but this is not recommended.
+```
+
 ## HomeWork #6 (terraform-1)
 #### Самостоятельная работа
 Установил input переменную для приватного ключа:
