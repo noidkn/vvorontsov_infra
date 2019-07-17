@@ -14,17 +14,14 @@ cat <<EOF > inventory.json
       "hostvars": {}
     },
     "app": {
-      "hosts": ["app_ip"]
+      "hosts": ["$app_ip"]
     },
     "db": {
-      "hosts": ["db_ip"]
+      "hosts": ["$db_ip"]
     }
 }
 EOF
 }
 
 inventory_template
-sed -i "s/app_ip/$app_ip/g" inventory.json
-sed -i "s/db_ip/$db_ip/g" inventory.json
-
 cat inventory.json
