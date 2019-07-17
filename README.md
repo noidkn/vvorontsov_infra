@@ -1,3 +1,95 @@
+## HomeWork #8 (ansible-1)
+#### Самостоятельная работа
+- Установил ansible(2.8.2)
+- Создал inventory (ini и yaml формат)
+```
+# ini
+[app]
+appserver ansible_host=34.76.37.244
+
+[db]
+dbserver  ansible_host=104.155.41.230
+```
+
+```
+# yaml
+app:
+  hosts:
+    appserver:
+      ansible_host: 34.76.37.244
+
+db:
+  hosts:
+    dbserver:
+      ansible_host: 104.155.41.230
+
+```
+- Создал playbook для клонирования репозитория:
+```
+- name: Clone
+  hosts: app
+  tasks:
+    - name: Clone repo
+      git:
+        repo: https://github.com/express42/reddit.git
+        dest: /home/appuser/reddit
+
+```
+После выполнения плейбука удалил реп с помощью команды `ansible app -m command -a 'rm -rf ~/reddit'`. Повторное выполнение плейбука
+клонирует репозиторий заново.
+#### Задание со*
+Написал скрипт для динамического создания inventory. В JSON шаблон подставляются выходные переменные terraform:
+```
+#!/bin/bash
+
+cd ../terraform/stage
+
+app_ip=$(terraform output app_external_ip)
+db_ip=$(terraform output db_external_ip)
+
+cd ../../ansible
+
+inventory_template () {
+cat <<EOF > inventory.json
+{
+    "_meta": {
+      "hostvars": {}
+    },
+    "app": {
+      "hosts": ["$app_ip"]
+    },
+    "db": {
+      "hosts": ["$db_ip"]
+    }
+}
+EOF
+}
+
+inventory_template
+cat inventory.json
+```
+
+Использование динамического инвентори можно прописать в ansible.cfg:
+```
+[defaults]
+inventory = ./dynamic_inventory.sh
+```
+Или указать с помощью флага `-i ./dynamic_inventory.sh`
+```
+➜  ansible git:(ansible-1) ✗ ansible-playbook -i dynamic-inventory.sh clone.yml
+
+PLAY [Clone] ************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [34.76.37.244]
+
+TASK [Clone repo] *******************************************************************************************************************************
+ok: [34.76.37.244]
+
+PLAY RECAP **************************************************************************************************************************************
+34.76.37.244               : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
 ## HomeWork #7 (terraform-2)
 #### Самостоятельная работа
 Создал с помощью packer отдельные образы для app и db:
