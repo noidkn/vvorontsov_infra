@@ -24,7 +24,7 @@ EOF
 }
 
 inventory_template
-sed -i s/app_ip/"$app_ip"/g inventory.json
-sed -i s/db_ip/"$db_ip"/g inventory.json
+sed -i "s/app_ip/$app_ip/g" inventory.json
+sed -i "s/db_ip/$db_ip/g" inventory.json
 
 cat inventory.json
