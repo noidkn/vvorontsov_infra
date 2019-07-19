@@ -1,3 +1,110 @@
+## HomeWork #9 (ansible-2)
+#### Самостоятельная работа
+- Создал playbooks для конфигурации виртуалок app и db:
+
+```  
+# app.yml 
+- name: Configure App
+  hosts: app
+  become: true
+  vars:
+   db_host: 10.132.0.61
+  tasks:
+    - name: Add unit file for Puma
+      copy:
+        src: files/puma.service
+        dest: /etc/systemd/system/puma.service
+      notify: reload puma
+
+    - name: Add config for DB connection
+      template:
+        src: templates/db_config.j2
+        dest: /home/appuser/db_config
+        owner: appuser
+        group: appuser
+
+    - name: enable puma
+      systemd: name=puma enabled=yes
+
+  handlers:
+  - name: reload puma
+    systemd: name=puma state=restarted
+```
+
+```
+# db.yml
+---
+- name: Configure MongoDB
+  hosts: db
+  become: true
+  vars:
+    mongo_bind_ip: 0.0.0.0
+  tasks:
+    - name: Change mongo config file
+      template:
+        src: templates/mongod.conf.j2
+        dest: /etc/mongod.conf
+        mode: 0644
+      notify: restart mongod
+
+  handlers:
+  - name: restart mongod
+    service: name=mongod state=restarted
+```
+И playbook для деплоя приложения:
+```
+# deploy.yml 
+- name: Deploy App
+  hosts: app
+  tasks:
+    - name: Fetch the latest version of application code
+      git:
+        repo: 'https://github.com/express42/reddit.git'
+        dest: /home/appuser/reddit
+        version: monolith
+      notify: restart puma
+
+    - name: bundle install
+      bundler:
+        state: present
+        chdir: /home/appuser/reddit
+
+  handlers:
+  - name: restart puma
+    become: true
+    systemd: name=puma state=restarted
+```
+Все плейбуки инклюдятся в site.yml, который мы запускаем с использованием скрипта dynamic-inventory.sh:
+```
+# site.yml  
+---
+- import_playbook: db.yml
+- import_playbook: app.yml
+- import_playbook: deploy.yml
+```
+Также сбилдил новые образы с помощью packer. Изменил provisioners на ansible playbooks:
+```
+  "provisioners": [
+        {
+            "type": "ansible",
+            "playbook_file": "ansible/packer_app.yml"
+        }
+    ]
+
+   "provisioners": [
+        {
+            "type": "ansible",
+            "playbook_file": "ansible/packer_db.yml"
+        }
+    ]
+
+```
+#### Использование dynamic inventory для GCP
+Есть несколько способов получить динамический инвентори:
+1. Использовать [gce inventory plugin](https://docs.ansible.com/ansible/2.5/scenario_guides/guide_gce.html#gce-dynamic-inventory)
+2. Использовать скрипт который извлекает данные из terraform.tfstate. Например [terraform.py](https://github.com/mantl/terraform.py)
+3. Использовать скрипт который получает выходные переменные terraform
+
 ## HomeWork #8 (ansible-1)
 #### Самостоятельная работа
 - Установил ansible(2.8.2)
@@ -89,7 +196,6 @@ ok: [34.76.37.244]
 PLAY RECAP **************************************************************************************************************************************
 34.76.37.244               : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
-
 ## HomeWork #7 (terraform-2)
 #### Самостоятельная работа
 Создал с помощью packer отдельные образы для app и db:
