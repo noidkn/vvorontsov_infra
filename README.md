@@ -1,11 +1,15 @@
 ## HomeWork #10 (ansible-3)
 #### Самостоятельная работа 
 - Создал роли app и db
+
 Инициализацию структуры каталогов роли можно выполнить с помощью команды:
+
 `ansible-galaxy init <role_name>`
 
 Из плейбуков перенес tasks, vars(defaults), templates, handlers, files в соответствующие файлы роли:
 ```
+# Пример структуры роли
+
 $ tree example-role
 example-role
 ├── README.md
