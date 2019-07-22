@@ -1,3 +1,97 @@
+## HomeWork #10 (ansible-3)
+#### Самостоятельная работа 
+- Создал роли app и db
+Инициализацию структуры каталогов роли можно выполнить с помощью команды:
+`ansible-galaxy init <role_name>`
+
+Из плейбуков перенес tasks, vars(defaults), templates, handlers, files в соответствующие файлы роли:
+```
+$ tree example-role
+example-role
+├── README.md
+├── defaults
+│ └── main.yml # <- Переменные и значения по умолчанию
+├── files
+├── handlers
+│ └── main.yml # <-- Обработчики (aka хэндлеры)
+├── meta
+│ └── main.yml # <-- Информация о роли и зависимостях
+├── tasks
+│ └── main.yml # <-- Основные задачи в роли
+├── templates
+│ └── mongod.conf.j2 # <-- Шаблоны конфигурации
+├── tests
+│ ├── inventory # <-- Сценарии и данные для тестирования
+│ └── test.yml
+└── vars
+└── main.yml # <-- Внутренние переменные роли
+```
+- Развернул окружения stage и prod
+```
+environments # tree .
+.
+├── prod
+│   ├── credentials.yml
+│   ├── group_vars
+│   │   ├── all
+│   │   ├── app
+│   │   └── db
+│   ├── inventory
+│   └── requirements.yml
+└── stage
+    ├── credentials.yml
+    ├── group_vars
+    │   ├── all
+    │   ├── app
+    │   └── db
+    ├── inventory
+    └── requirements.yml
+
+```
+- Добавил роль nginx с помощью requirements.yml:
+```
+- src: jdauphant.nginx
+  version: v2.21.1
+```
+`ansible-galaxy install -r environments/stage/requirements.yml`
+
+Добавил правило для nginx в firewall:
+```
+resource "google_compute_firewall" "firewall_http" {
+  name = "allow-http-default"
+
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["reddit-app"]
+}
+
+```
+
+- Использовал Ansible Vault для шифрации файла:
+
+`ansible-vault encrypt environments/stage/credentials.yml`
+
+```
+➜ ansible/environments/stage/credentials.yml
+$ANSIBLE_VAULT;1.1;AES256
+31313633666438623466303536313931333638363333646666386563383835366566316261396163
+3765323765666338646138326365666662666134626537640a313936346261316230613733363064
+61306331613566386534656366313361613232646434333333366666386433613166383165623837
+3764383937663134340a653637623464353261613332643065653838666531623834333233363032
+36326638373230366562366533383133633639326237613733363338663336376565376238636434
+38393161396464666132663237336262653237656261333463303537373664616431663661363665
+36353330623231666636373930383464363739376465626335353137386437613761323733393430
+33623934323639353632393734316665346239396464623131613666383565313032623564646634
+3238
+
+```
+
 ## HomeWork #9 (ansible-2)
 #### Самостоятельная работа
 - Создал playbooks для конфигурации виртуалок app и db:
