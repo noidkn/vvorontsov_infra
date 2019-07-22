@@ -26,7 +26,7 @@ example-role
 └── vars
 └── main.yml # <-- Внутренние переменные роли
 ```
-- Развернул окружения stage и prod
+- Развернул окружение stage и prod
 ```
 environments # tree .
 .
