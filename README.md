@@ -1,3 +1,114 @@
+## HomeWork #11 (ansible-4)
+#### Самостоятельная работа 
+- Установил virtualbox(6.0) и vagrant(2.2.5)
+Vagrant используется в качестве системы управления конфигурации VM, а virtualbox в качестве провайдера.
+
+- С помощью ansible ролей app и db развернул приложение reddit-app.
+```
+# Vagrantfile
+
+Vagrant.configure("2") do |config|
+
+  config.vm.provider :virtualbox do |v|
+    v.memory = 512
+  end
+
+  config.vm.define "dbserver" do |db|
+    db.vm.box = "ubuntu/xenial64"
+    db.vm.hostname = "dbserver"
+    db.vm.network :private_network, ip: "10.10.10.10"
+
+    db.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbooks/site.yml"
+      ansible.groups = {
+      "db" => ["dbserver"],
+      "db:vars" => {"mongo_bind_ip" => "0.0.0.0"}
+      }
+    end
+  end
+
+  config.vm.define "appserver" do |app|
+    app.vm.box = "ubuntu/xenial64"
+    app.vm.hostname = "appserver"
+    app.vm.network :private_network, ip: "10.10.10.20"
+
+    app.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbooks/site.yml"
+      ansible.groups = {
+      "app" => ["appserver"],
+      "app:vars" => { "db_host" => "10.10.10.10"}
+      }
+      ansible.extra_vars = {
+        "deploy_user" => "vagrant"
+      }
+    end
+  end
+end
+
+```
+
+Работа с vagrant: 
+```
+vagrant up - поднять окружение из Vagrantfile
+vagrant destroy -f удалить окружение
+vagrant provision <vm name> - запустить provision
+```
+
+Также изменил ansible роль app. Были параметризованы плейбуки чтобы дать возможность указать пользователя для установки приложения:
+```
+ansible.extra_vars = {
+        "deploy_user" => "vagrant"
+      }
+```
+
+- Установил molecule(2.20.2) и настроил virtualenv для python
+- Написал тесты для проверки работы приложения:
+```
+import os
+
+import testinfra.utils.ansible_runner
+
+testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
+    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
+
+
+# check if MongoDB is enabled and running
+def test_mongo_running_and_enabled(host):
+    mongo = host.service("mongod")
+    assert mongo.is_running
+    assert mongo.is_enabled
+
+
+# check if configuration file contains the required line
+def test_config_file(host):
+    config_file = host.file('/etc/mongod.conf')
+    assert config_file.contains('bindIp: 0.0.0.0')
+    assert config_file.is_file
+
+
+def test_listening_port(host):
+    mongo_port = host.socket('tcp://0.0.0.0:27017')
+    assert mongo_port.is_listening
+
+```
+#### Задание со*
+Настроил nginx для проксирования приложения с помощью ansible роли:
+```
+- name: Configure App
+  hosts: app
+  become: true
+
+  roles:
+    - app
+    - role: jdauphant.nginx
+      nginx_sites:
+        default:
+          - listen 80
+          - server_name reddit
+          - location / { proxy_pass http://127.0.0.1:9292; }
+
+```
+
 ## HomeWork #10 (ansible-3)
 #### Самостоятельная работа 
 - Создал роли app и db
